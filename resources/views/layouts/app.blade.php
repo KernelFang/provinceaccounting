@@ -416,34 +416,6 @@
     </script>
 
     <script>
-        // Print helper: clones the content of the element with the given id into a new window and prints it.
-        function printElement(printableId) {
-            const el = document.getElementById(printableId);
-            if (!el) return alert('Printable area not found');
-
-            // Collect stylesheet links to preserve styles in print window
-            const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
-
-            const html =
-                `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${links.map(h=>`<link rel="stylesheet" href="${h}">`).join('')}</head><body>${el.outerHTML}</body></html>`;
-
-            const w = window.open('', '_blank');
-            if (!w) return alert('Unable to open print window. Please allow popups.');
-            w.document.open();
-            w.document.write(html);
-            w.document.close();
-
-            // Give the browser a moment to load styles before printing
-            w.focus();
-            setTimeout(() => {
-                w.print();
-                // optionally close after printing
-                // w.close();
-            }, 500);
-        }
-    </script>
-
-    <script>
         window.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('input[type="checkbox"].reset-on-load').forEach(function(checkbox) {
                 checkbox.checked = false;

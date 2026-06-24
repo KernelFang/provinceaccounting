@@ -35,6 +35,7 @@ class ExpenseUpdateRequest extends FormRequest
             'expense_details' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'transaction_reference' => ['required', 'string', 'max:191'],
+            'payment_status' => ['required', 'in:paid,unpaid'],
         ];
     }
 

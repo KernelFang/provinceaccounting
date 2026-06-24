@@ -41,7 +41,6 @@
                     </option>
                     <option value="paid" @selected(old('payment_status', $expense->payment_status ?? null) === 'paid')>Paid</option>
                     <option value="unpaid" @selected(old('payment_status', $expense->payment_status ?? null) === 'unpaid')>Unpaid</option>
-                    <option value="petty_cash" @selected(old('payment_status', $expense->payment_status ?? null) === 'petty_cash')>Petty Cash</option>
                 </select>
             </div>
 

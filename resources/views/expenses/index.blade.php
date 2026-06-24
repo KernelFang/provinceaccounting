@@ -175,16 +175,6 @@
             <div class="ps-widget bgc-white bdrs4 p30 mb30 overflow-hidden position-relative">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="list-title mt-2">{{ __('Expenses') }}</h5>
-
-                    @canany(['expense.*', 'expense.restore', 'expense.force-delete'])
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('expenses.index') }}" class="btn btn-sm btn-outline-primary">All</a>
-                            <a href="{{ route('expenses.index', array_merge(request()->query(), ['with_trashed' => 1])) }}"
-                                class="btn btn-sm btn-outline-secondary">With Trashed</a>
-                            <a href="{{ route('expenses.index', array_merge(request()->query(), ['only_trashed' => 1])) }}"
-                                class="btn btn-sm btn-outline-danger">Only Trashed</a>
-                        </div>
-                    @endcanany
                 </div>
 
                 <p class="text-muted">A list of all the {{ __('Expenses') }}.</p>
@@ -252,12 +242,6 @@
                                                             class="fas fa-trash text-danger"></span></a>
                                                 </form>
                                             @endcanany
-
-                                            @if (method_exists($expense, 'trashed') && $expense->trashed())
-                                                @canany(['expenses.*', 'expenses.restore', 'expenses.force-delete'])
-                                                    <x-delete-restore-buttons routePrefix="expenses" :model="$expense" />
-                                                @endcanany
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>

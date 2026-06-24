@@ -19,16 +19,6 @@
             <div class="ps-widget bgc-white bdrs4 p30 mb30 overflow-hidden position-relative">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="list-title mt-2">{{ __('Designations') }}</h5>
-
-                    @canany(['designations.*', 'designations.restore', 'designations.force-delete'])
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('designations.index') }}" class="btn btn-sm btn-outline-primary">All</a>
-                            <a href="{{ route('designations.index', array_merge(request()->query(), ['with_trashed' => 1])) }}"
-                                class="btn btn-sm btn-outline-secondary">With Trashed</a>
-                            <a href="{{ route('designations.index', array_merge(request()->query(), ['only_trashed' => 1])) }}"
-                                class="btn btn-sm btn-outline-danger">Only Trashed</a>
-                        </div>
-                    @endcanany
                 </div>
 
                 <p class="text-muted">A list of all designations.</p>
@@ -66,13 +56,6 @@
                                                 </form>
                                             @endcanany
 
-                                            @if (method_exists($it, 'trashed') && $it->trashed())
-                                                @canany(['designations.*', 'designations.restore',
-                                                    'designations.force-delete'])
-                                                    <x-delete-restore-buttons routePrefix="designations"
-                                                        :model="$it" />
-                                                @endcanany
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>
