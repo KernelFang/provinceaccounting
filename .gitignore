@@ -1,0 +1,36 @@
+#/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+#/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.fleet
+/.idea
+/.vscode
+*.mp4
+*.log
+
+# =========================
+# Optional
+# =========================
+/vendor/_laravel_ide
+
+# =========================
+# Windows OS Specific Junk
+# =========================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
