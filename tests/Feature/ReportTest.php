@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Expense;
 use App\Models\Flat;
+use App\Models\FlatPricingHistory;
 use App\Models\Income;
 use App\Models\Project;
 use App\Models\User;
@@ -19,6 +20,27 @@ test('report page is accessible for administrators', function () {
     $response->assertSee('Advanced Report Filters');
 });
 
+test('module reports render explicit table headers', function () {
+    $user = User::factory()->create([
+        'user_type' => 'superadmin',
+        'email_verified_at' => now(),
+    ]);
+
+    Project::factory()->create([
+        'name' => 'North Tower',
+        'status' => 'ongoing',
+        'location' => 'Downtown',
+    ]);
+
+    $response = $this->actingAs($user)->get('/account/reports?module=projects');
+
+    $response->assertOk();
+    $response->assertSee('Name');
+    $response->assertSee('Status');
+    $response->assertSee('Location');
+    $response->assertSee('Created At');
+});
+
 test('selected project reports include lifecycle sections', function () {
     $user = User::factory()->create([
         'user_type' => 'superadmin',
@@ -26,8 +48,13 @@ test('selected project reports include lifecycle sections', function () {
     ]);
 
     $project = Project::factory()->create();
-    Flat::factory()->create(['project_id' => $project->id, 'flat_no' => 'A-1']);
-    Income::factory()->create(['project_id' => $project->id, 'price' => 1000]);
+    $flat = Flat::factory()->create(['project_id' => $project->id, 'flat_no' => 'A-1']);
+    FlatPricingHistory::factory()->create([
+        'flat_id' => $flat->id,
+        'price' => 1250,
+        'effective_date' => now()->toDateString(),
+    ]);
+    Income::factory()->create(['project_id' => $project->id, 'flat_id' => $flat->id, 'price' => 1000]);
     Expense::factory()->create(['project_id' => $project->id, 'amount' => 250]);
 
     $response = $this->actingAs($user)->get('/account/reports?module=projects&item_id='.$project->id);
@@ -37,6 +64,9 @@ test('selected project reports include lifecycle sections', function () {
     $response->assertSee('Flats');
     $response->assertSee('Income');
     $response->assertSee('Expenses');
+    $response->assertSee('Owner');
+    $response->assertSee('Invoice');
+    $response->assertSee('Effective Date');
 });
 
 test('client reports hide the status filter and keep the item selector available', function () {

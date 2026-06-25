@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ReportExport;
 use App\Models\Client;
 use App\Models\Expense;
 use App\Models\Flat;
@@ -11,8 +12,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\FromArray;
 
 class ReportController extends Controller
 {
@@ -73,38 +72,7 @@ class ReportController extends Controller
         }
 
         if ($type === 'xlsx') {
-            $export = new class($report) implements FromArray {
-                public function __construct(protected array $report) {}
-
-                public function array(): array
-                {
-                    $rows = [];
-                    $rows[] = ['Field', 'Value'];
-                    $rows[] = ['Title', $this->report['title'] ?? 'Generated Report'];
-                    $rows[] = ['Module', ucfirst($this->report['module'])];
-                    $rows[] = ['Item', $this->report['item_label'] ?? 'N/A'];
-
-                    foreach ($this->report['totals'] ?? [] as $key => $value) {
-                        $rows[] = [str_replace('_', ' ', ucfirst($key)), is_numeric($value) ? number_format($value, 2) : $value];
-                    }
-
-                    foreach ($this->report['sections'] ?? [] as $section) {
-                        $rows[] = [$section['title'], ''];
-
-                        foreach ($section['rows'] ?? [] as $row) {
-                            if (is_array($row)) {
-                                $rows[] = [($row['label'] ?? ''), ($row['value'] ?? '')];
-                            } else {
-                                $rows[] = ['Row', $row];
-                            }
-                        }
-                    }
-
-                    return $rows;
-                }
-            };
-
-            return Excel::download($export, $fileName.'.xlsx');
+            return Excel::download(new ReportExport($report), $fileName.'.xlsx');
         }
 
         abort(404);
@@ -140,10 +108,14 @@ class ReportController extends Controller
         $labels = $this->labelsFor($module, $records);
         $totals = $this->totalsFor($module, $records);
 
+        [$tableHeaders, $tableRows] = $this->tableDataFor($module, $records, $labels);
+
         return [
             'module' => $module,
             'records' => $records,
             'labels' => $labels,
+            'table_headers' => $tableHeaders,
+            'table_rows' => $tableRows,
             'totals' => $totals,
             'grouped' => $this->groupRecords($records, $request->input('group_by')),
             'item' => null,
@@ -216,23 +188,39 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Flats',
-                    'type' => 'list',
-                    'rows' => $flatRecords->map(fn ($flat) => $flat->building_no.'-'.$flat->flat_no.' · '.($flat->currentOwner ? trim($flat->currentOwner->first_name.' '.$flat->currentOwner->last_name) : 'Vacant'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $flatRecords->map(fn ($flat) => [
+                        'flat' => trim(($flat->building_no ?? '').'-'.($flat->flat_no ?? ''), '-') ?: 'N/A',
+                        'owner' => $flat->currentOwner ? trim($flat->currentOwner->first_name.' '.$flat->currentOwner->last_name) : 'Vacant',
+                        'status' => $flat->client_owner_status ?? 'N/A',
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Pricing History',
-                    'type' => 'list',
-                    'rows' => $flatRecords->flatMap(fn ($flat) => $flat->pricingHistories)->filter()->map(fn ($history) => ($history->flat?->building_no ?? '').'-'.($history->flat?->flat_no ?? '').' · '.number_format($history->price ?? 0, 2).' · '.($history->effective_date ? $history->effective_date->format('M d, Y') : 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $flatRecords->flatMap(fn ($flat) => $flat->pricingHistories)->filter()->map(fn ($history) => [
+                        'flat' => trim(($history->flat?->building_no ?? '').'-'.($history->flat?->flat_no ?? ''), '-') ?: 'N/A',
+                        'price' => number_format($history->price ?? 0, 2),
+                        'effective_date' => $history->effective_date ? $history->effective_date->format('M d, Y') : 'N/A',
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Income',
-                    'type' => 'list',
-                    'rows' => $incomeRecords->map(fn ($income) => ($income->invoice_no ?? 'Income '.$income->id).' · '.number_format($income->price ?? 0, 2).' · '.($income->client ? trim($income->client->first_name.' '.$income->client->last_name) : 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $incomeRecords->map(fn ($income) => [
+                        'invoice_no' => $income->invoice_no ?? ('Income '.$income->id),
+                        'client' => $income->client ? trim($income->client->first_name.' '.$income->client->last_name) : 'N/A',
+                        'amount' => number_format($income->price ?? 0, 2),
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Expenses',
-                    'type' => 'list',
-                    'rows' => $expenseRecords->map(fn ($expense) => ($expense->transaction_reference ?? 'Expense '.$expense->id).' · '.number_format($expense->amount ?? 0, 2).' · '.($expense->expenseType->name ?? 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $expenseRecords->map(fn ($expense) => [
+                        'transaction_reference' => $expense->transaction_reference ?? ('Expense '.$expense->id),
+                        'category' => $expense->expenseType->name ?? 'N/A',
+                        'amount' => number_format($expense->amount ?? 0, 2),
+                    ])->values()->all(),
                 ],
             ],
         ];
@@ -277,13 +265,20 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Flats',
-                    'type' => 'list',
-                    'rows' => $flatRecords->map(fn ($flat) => ($flat->building_no ?? '').'-'.($flat->flat_no ?? '').' · '.($flat->project->name ?? 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $flatRecords->map(fn ($flat) => [
+                        'flat' => trim(($flat->building_no ?? '').'-'.($flat->flat_no ?? ''), '-') ?: 'N/A',
+                        'project' => $flat->project->name ?? 'N/A',
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Income',
-                    'type' => 'list',
-                    'rows' => $incomeRecords->map(fn ($income) => ($income->invoice_no ?? 'Income '.$income->id).' · '.number_format($income->price ?? 0, 2).' · '.($income->project->name ?? 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $incomeRecords->map(fn ($income) => [
+                        'invoice_no' => $income->invoice_no ?? ('Income '.$income->id),
+                        'project' => $income->project->name ?? 'N/A',
+                        'amount' => number_format($income->price ?? 0, 2),
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Projects',
@@ -333,18 +328,27 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Pricing History',
-                    'type' => 'list',
-                    'rows' => $flat->pricingHistories->map(fn ($history) => number_format($history->price ?? 0, 2).' · '.($history->effective_date ? $history->effective_date->format('M d, Y') : 'N/A'))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $flat->pricingHistories->map(fn ($history) => [
+                        'price' => number_format($history->price ?? 0, 2),
+                        'effective_date' => $history->effective_date ? $history->effective_date->format('M d, Y') : 'N/A',
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Income',
-                    'type' => 'list',
-                    'rows' => $incomeRecords->map(fn ($income) => ($income->invoice_no ?? 'Income '.$income->id).' · '.number_format($income->price ?? 0, 2))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $incomeRecords->map(fn ($income) => [
+                        'invoice_no' => $income->invoice_no ?? ('Income '.$income->id),
+                        'amount' => number_format($income->price ?? 0, 2),
+                    ])->values()->all(),
                 ],
                 [
                     'title' => 'Expenses',
-                    'type' => 'list',
-                    'rows' => $expenseRecords->map(fn ($expense) => ($expense->transaction_reference ?? 'Expense '.$expense->id).' · '.number_format($expense->amount ?? 0, 2))->values()->all(),
+                    'type' => 'table',
+                    'rows' => $expenseRecords->map(fn ($expense) => [
+                        'transaction_reference' => $expense->transaction_reference ?? ('Expense '.$expense->id),
+                        'amount' => number_format($expense->amount ?? 0, 2),
+                    ])->values()->all(),
                 ],
             ],
         ];
@@ -383,12 +387,12 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Related Records',
-                    'type' => 'list',
-                    'rows' => [
-                        'Project: '.($income->project->name ?? 'N/A'),
-                        'Flat: '.($income->flat ? ($income->flat->building_no ?? '').'-'.($income->flat->flat_no ?? '') : 'N/A'),
-                        'Payment Method: '.($income->paymentMethod->name ?? 'N/A'),
-                    ],
+                    'type' => 'table',
+                    'rows' => [[
+                        'project' => $income->project->name ?? 'N/A',
+                        'flat' => $income->flat ? trim(($income->flat->building_no ?? '').'-'.($income->flat->flat_no ?? ''), '-') : 'N/A',
+                        'payment_method' => $income->paymentMethod->name ?? 'N/A',
+                    ]],
                 ],
             ],
         ];
@@ -427,12 +431,12 @@ class ReportController extends Controller
                 ],
                 [
                     'title' => 'Related Records',
-                    'type' => 'list',
-                    'rows' => [
-                        'Project: '.($expense->project->name ?? 'N/A'),
-                        'Flat: '.($expense->flat ? ($expense->flat->building_no ?? '').'-'.($expense->flat->flat_no ?? '') : 'N/A'),
-                        'Payment Method: '.($expense->paymentMethod->name ?? 'N/A'),
-                    ],
+                    'type' => 'table',
+                    'rows' => [[
+                        'project' => $expense->project->name ?? 'N/A',
+                        'flat' => $expense->flat ? trim(($expense->flat->building_no ?? '').'-'.($expense->flat->flat_no ?? ''), '-') : 'N/A',
+                        'payment_method' => $expense->paymentMethod->name ?? 'N/A',
+                    ]],
                 ],
             ],
         ];
@@ -542,6 +546,69 @@ class ReportController extends Controller
             'incomes' => ['count' => $records->count(), 'total' => $records->sum('price')],
             'expenses' => ['count' => $records->count(), 'total' => $records->sum('amount')],
             default => ['count' => $records->count()],
+        };
+    }
+
+    protected function tableDataFor(string $module, $records, array $labels): array
+    {
+        return match ($module) {
+            'projects' => [
+                ['Name', 'Status', 'Location', 'Created At'],
+                $records->map(fn ($record) => [
+                    $record->name ?? 'N/A',
+                    $record->status ?? 'N/A',
+                    $record->location ?? 'N/A',
+                    optional($record->created_at)?->format('M d, Y') ?? 'N/A',
+                ])->values()->all(),
+            ],
+            'clients' => [
+                ['Name', 'Phone', 'Email', 'Created At'],
+                $records->map(fn ($record) => [
+                    trim(($record->first_name ?? '').' '.($record->last_name ?? '')) ?: 'N/A',
+                    $record->phone ?? 'N/A',
+                    $record->email ?? 'N/A',
+                    optional($record->created_at)?->format('M d, Y') ?? 'N/A',
+                ])->values()->all(),
+            ],
+            'flats' => [
+                ['Flat', 'Project', 'Owner', 'Status'],
+                $records->map(fn ($record) => [
+                    trim(($record->building_no ?? '').'-'.($record->flat_no ?? ''), '-') ?: 'N/A',
+                    $record->project->name ?? 'N/A',
+                    $record->currentOwner ? trim($record->currentOwner->first_name.' '.$record->currentOwner->last_name) : 'Vacant',
+                    $record->client_owner_status ?? 'N/A',
+                ])->values()->all(),
+            ],
+            'incomes' => [
+                ['Invoice', 'Project', 'Client', 'Status', 'Amount'],
+                $records->map(fn ($record) => [
+                    $record->invoice_no ?: ('Income '.$record->id),
+                    $record->project->name ?? 'N/A',
+                    $record->client ? trim($record->client->first_name.' '.$record->client->last_name) : 'N/A',
+                    $record->clearing_status ?? 'N/A',
+                    number_format($record->price ?? 0, 2),
+                ])->values()->all(),
+            ],
+            'expenses' => [
+                ['Reference', 'Project', 'Category', 'Status', 'Amount'],
+                $records->map(fn ($record) => [
+                    $record->transaction_reference ?: ('Expense '.$record->id),
+                    $record->project->name ?? 'N/A',
+                    $record->expenseType->name ?? 'N/A',
+                    $record->payment_status ?? 'N/A',
+                    number_format($record->amount ?? 0, 2),
+                ])->values()->all(),
+            ],
+            default => [
+                ['Label', 'Status', 'Amount'],
+                $records->map(function ($record, $index) use ($labels) {
+                    return [
+                        $labels[$index] ?? ($record->name ?? ($record->invoice_no ?? ($record->transaction_reference ?? 'Record'))),
+                        $record->status ?? ($record->payment_status ?? ($record->clearing_status ?? 'N/A')),
+                        number_format($record->price ?? ($record->amount ?? 0), 2),
+                    ];
+                })->values()->all(),
+            ],
         };
     }
 

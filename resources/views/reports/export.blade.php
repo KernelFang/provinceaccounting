@@ -18,6 +18,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 12px;
+            table-layout: fixed;
         }
 
         th,
@@ -25,6 +26,8 @@
             border: 1px solid #ddd;
             padding: 6px;
             text-align: left;
+            vertical-align: top;
+            word-break: break-word;
         }
 
         th {
@@ -66,11 +69,41 @@
                 </table>
             @else
                 @if (!empty($section['rows']))
+                    @php
+                        $tableRows = collect($section['rows']);
+                        $firstRow = $tableRows->first();
+                        $isStructuredRows = is_array($firstRow) || is_object($firstRow);
+                        $tableColumns = $section['columns'] ?? [];
+
+                        if ($isStructuredRows && empty($tableColumns)) {
+                            $tableColumns = array_keys((array) $firstRow);
+                        }
+                    @endphp
+
                     <table>
+                        <thead>
+                            <tr>
+                                @if ($isStructuredRows)
+                                    @foreach ($tableColumns as $columnKey => $columnLabel)
+                                        <th>{{ is_int($columnKey) ? ucwords(str_replace('_', ' ', $columnLabel)) : $columnLabel }}
+                                        </th>
+                                    @endforeach
+                                @else
+                                    <th>Item</th>
+                                @endif
+                            </tr>
+                        </thead>
                         <tbody>
-                            @foreach ($section['rows'] as $row)
+                            @foreach ($tableRows as $row)
                                 <tr>
-                                    <td>{{ $row }}</td>
+                                    @if ($isStructuredRows)
+                                        @foreach ($tableColumns as $columnKey => $columnLabel)
+                                            @php $columnName = is_int($columnKey) ? $columnLabel : $columnKey; @endphp
+                                            <td>{{ data_get($row, $columnName, '') }}</td>
+                                        @endforeach
+                                    @else
+                                        <td>{{ $row }}</td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>
@@ -79,28 +112,31 @@
             @endif
         @endforeach
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Label</th>
-                    <th>Status</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($report['records'] as $index => $record)
+        @php
+            $tableHeaders = $report['table_headers'] ?? [];
+            $tableRows = $report['table_rows'] ?? [];
+        @endphp
+
+        @if (!empty($tableRows))
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $report['labels'][$index] ?? ($record->name ?? ($record->invoice_no ?? ($record->transaction_reference ?? 'Record'))) }}
-                        </td>
-                        <td>{{ $record->status ?? ($record->payment_status ?? ($record->clearing_status ?? 'N/A')) }}
-                        </td>
-                        <td>{{ number_format($record->price ?? ($record->amount ?? 0), 2) }}</td>
+                        @foreach ($tableHeaders as $header)
+                            <th>{{ $header }}</th>
+                        @endforeach
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach ($tableRows as $row)
+                        <tr>
+                            @foreach ($row as $cell)
+                                <td>{{ $cell }}</td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     @endif
 </body>
 
