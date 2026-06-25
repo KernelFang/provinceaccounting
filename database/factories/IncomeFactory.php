@@ -26,7 +26,7 @@ class IncomeFactory extends Factory
             'invoice_no' => strtoupper($this->faker->bothify('INV-#######')),
             'clearing_status' => $this->faker->randomElement(['pending', 'cleared', 'bounced']),
             'remarks' => $this->faker->optional()->sentence(),
-            'created_by' => User::factory(),
+            'created_by' => User::query()->exists() ? User::query()->inRandomOrder()->value('id') : null,
         ];
     }
 }

@@ -25,7 +25,7 @@ class ExpenseFactory extends Factory
             'expense_details' => $this->faker->sentence(),
             'amount' => $this->faker->randomFloat(2, 10, 2000),
             'transaction_reference' => strtoupper(Str::random(12)),
-            'created_by' => User::factory(),
+            'created_by' => User::query()->exists() ? User::query()->inRandomOrder()->value('id') : null,
         ];
     }
 }

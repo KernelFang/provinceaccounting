@@ -2,13 +2,20 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Flat;
 use App\Models\FlatPricingHistory;
+use Illuminate\Database\Seeder;
 
 class FlatPricingHistorySeeder extends Seeder
 {
     public function run(): void
     {
-        FlatPricingHistory::factory()->count(30)->create();
+        $flats = Flat::query()->get();
+
+        foreach ($flats as $flat) {
+            FlatPricingHistory::factory()->count(2)->state([
+                'flat_id' => $flat->id,
+            ])->create();
+        }
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,7 @@ Route::get('/', [HomeController::class, 'welcome'])->name('welcome');
 Route::prefix('account')->group(function () {
     Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->middleware(['verified'])->name('dashboard');
+        Route::get('/reports', [ReportController::class, 'index'])->middleware(['verified'])->name('reports.index');
 
         Route::middleware(['permission'])->group(function () {
             Route::get('/profile', [UserController::class, 'profile'])->name('users.profile');

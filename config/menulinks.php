@@ -12,6 +12,10 @@ return [
             ['module' => 'expenses', 'route' => 'expenses.index', 'icon' => 'fas fa-money-check-alt mr15', 'label' => 'Expenses'],
         ],
 
+        'Reports' => [
+            ['module' => 'reports', 'route' => 'reports.index', 'icon' => 'fas fa-chart-bar mr15', 'label' => 'Reports'],
+        ],
+
         'Settings' => [
             ['module' => 'expense-types', 'route' => 'expense-types.index', 'icon' => 'fas fa-list mr15', 'label' => 'Expense Types'],
             ['module' => 'payment-methods', 'route' => 'payment-methods.index', 'icon' => 'fas fa-credit-card mr15', 'label' => 'Payment Methods'],

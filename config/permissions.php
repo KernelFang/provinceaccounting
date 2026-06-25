@@ -17,6 +17,9 @@ return [
         'incomes' => ['*'],
         'payment-methods' => ['*'],
 
+        // Report modules
+        'reports' => ['*'],
+
         // settings modules
         'departments' => ['*'],
         'designations' => ['*'],

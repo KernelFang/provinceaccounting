@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Project;
 use Illuminate\Database\Seeder;
-use App\Models\Airline;
 
-class AirlineSeeder extends Seeder
+class ProjectSeeder extends Seeder
 {
     public function run(): void
     {
-        Airline::factory()->count(10)->create();
+        Project::factory()->count(5)->create();
     }
 }

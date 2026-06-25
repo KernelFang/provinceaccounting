@@ -14,6 +14,9 @@ return [
     'petty-cashes' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'],
     'audit-logs' => ['index', 'show'],
 
+    // Report modules
+    'reports' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'],
+
     // settings modules
     'departments' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'],
     'designations' => ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'],
