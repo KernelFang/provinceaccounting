@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 
 class Expense extends Model
 {
@@ -106,12 +107,39 @@ class Expense extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function pettyCashEntry()
+    {
+        return $this->hasOne(PettyCash::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($expense) {
             if (auth()->check()) {
                 $expense->created_by = auth()->id();
             }
+        });
+
+        static::updating(function ($expense) {
+            if (auth()->check()) {
+                $expense->updated_by = auth()->id();
+            }
+        });
+
+        static::deleting(function ($expense) {
+            if (auth()->check()) {
+                $expense->deleted_by = auth()->id();
+            }
+
+            static::removePettyCashEntry($expense);
+        });
+
+        static::saved(function ($expense) {
+            static::syncPettyCashEntry($expense);
+        });
+
+        static::restored(function ($expense) {
+            static::syncPettyCashEntry($expense);
         });
 
         // This is not longer needed since we are now auditing all models globally in AppServiceProvider, but I'm leaving it here commented out for reference
@@ -126,5 +154,34 @@ class Expense extends Model
         // static::deleted(function ($expense) {
         //     Audit::createAudit('delete', $expense, $expense->getOriginal(), null);
         // });
+    }
+
+    protected static function syncPettyCashEntry(self $expense): void
+    {
+        static::removePettyCashEntry($expense);
+
+        if ($expense->payment_status !== 'petty_cash') {
+            return;
+        }
+
+        PettyCash::create([
+            'title' => 'Expense '.($expense->transaction_reference ?: $expense->id),
+            'transaction_type' => 'debit_expense',
+            'amount' => $expense->amount,
+            'current_balance' => round(PettyCash::balance() - (float) $expense->amount, 2),
+            'expense_id' => $expense->getKey(),
+            'description' => $expense->expense_details,
+            'date' => $expense->date?->toDateString() ?? now()->toDateString(),
+            'created_by' => Auth::id() ?? $expense->created_by,
+            'updated_by' => Auth::id() ?? $expense->updated_by,
+        ]);
+    }
+
+    protected static function removePettyCashEntry(self $expense): void
+    {
+        PettyCash::query()
+            ->where('expense_id', $expense->getKey())
+            ->where('transaction_type', 'debit_expense')
+            ->delete();
     }
 }

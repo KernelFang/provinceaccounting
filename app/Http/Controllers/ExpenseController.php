@@ -7,6 +7,7 @@ use App\Http\Requests\ExpenseUpdateRequest;
 use App\Models\Expense;
 use App\Models\ExpenseType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -33,38 +34,40 @@ class ExpenseController extends Controller
             $query->where('amount', '<=', $max);
         }
 
-            // Date range filtering for expenses (date)
-            $start = null;
-            $end = null;
-            $rangeInput = request('date_range');
-            if ($rangeInput) {
-                $r = trim($rangeInput);
-                if (preg_match('/\d{4}-\d{2}-\d{2}\s*-\s*\d{4}-\d{2}-\d{2}/', $r) || preg_match('/\d{1,2}\/\d{1,2}\/\d{4}\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}/', $r)) {
-                    $parts = preg_split('/\s*-\s*/', $r, 2);
-                    if (count($parts) === 2) {
-                        try {
-                            $a = \Carbon\Carbon::parse($parts[0]);
-                            $b = \Carbon\Carbon::parse($parts[1]);
-                            $start = $a->copy()->startOfDay();
-                            $end = $b->copy()->endOfDay();
-                        } catch (\Exception $e) {
-                            $start = null; $end = null;
-                        }
+        // Date range filtering for expenses (date)
+        $start = null;
+        $end = null;
+        $rangeInput = request('date_range');
+        if ($rangeInput) {
+            $r = trim($rangeInput);
+            if (preg_match('/\d{4}-\d{2}-\d{2}\s*-\s*\d{4}-\d{2}-\d{2}/', $r) || preg_match('/\d{1,2}\/\d{1,2}\/\d{4}\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}/', $r)) {
+                $parts = preg_split('/\s*-\s*/', $r, 2);
+                if (count($parts) === 2) {
+                    try {
+                        $a = \Carbon\Carbon::parse($parts[0]);
+                        $b = \Carbon\Carbon::parse($parts[1]);
+                        $start = $a->copy()->startOfDay();
+                        $end = $b->copy()->endOfDay();
+                    } catch (\Exception $e) {
+                        $start = null;
+                        $end = null;
                     }
                 }
-            } elseif ($date = request('date')) {
-                try {
-                    $d = \Carbon\Carbon::parse($date);
-                    $start = $d->copy()->startOfDay();
-                    $end = $d->copy()->endOfDay();
-                } catch (\Exception $e) {
-                    $start = null; $end = null;
-                }
             }
+        } elseif ($date = request('date')) {
+            try {
+                $d = \Carbon\Carbon::parse($date);
+                $start = $d->copy()->startOfDay();
+                $end = $d->copy()->endOfDay();
+            } catch (\Exception $e) {
+                $start = null;
+                $end = null;
+            }
+        }
 
-            if ($start && $end) {
-                $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-            }
+        if ($start && $end) {
+            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
+        }
 
         // Prepare summary for current filters
         $summaryQuery = clone $query;
@@ -116,6 +119,7 @@ class ExpenseController extends Controller
     public function create(Expense $expense)
     {
         $categories = ExpenseType::orderBy('name')->get();
+
         return view('expenses.create', compact('expense', 'categories'));
     }
 
@@ -126,7 +130,9 @@ class ExpenseController extends Controller
     {
         $validatedData = $request->validated();
 
-        Expense::create($validatedData);
+        DB::transaction(function () use ($validatedData): void {
+            Expense::create($validatedData);
+        });
 
         return redirect()->route('expenses.index')->with('success', 'Expense added successfully.');
     }
@@ -145,6 +151,7 @@ class ExpenseController extends Controller
     public function edit(Expense $expense)
     {
         $categories = ExpenseType::orderBy('name')->get();
+
         return view('expenses.edit', compact('expense', 'categories'));
     }
 
@@ -155,7 +162,9 @@ class ExpenseController extends Controller
     {
         $validatedData = $request->validated();
 
-        $expense->update($validatedData);
+        DB::transaction(function () use ($expense, $validatedData): void {
+            $expense->update($validatedData);
+        });
 
         return redirect()->route('expenses.index')->with('success', 'Expense updated successfully.');
     }
@@ -165,7 +174,9 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense)
     {
-        $expense->delete();
+        DB::transaction(function () use ($expense): void {
+            $expense->delete();
+        });
 
         return redirect()->route('expenses.index')->with('success', 'Expense deleted successfully');
     }

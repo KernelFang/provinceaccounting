@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('expense_details')->nullable();
             $table->decimal('amount', 18, 2);
             $table->string('transaction_reference', 191)->index();
+            $table->enum('payment_status', ['paid', 'unpaid', 'petty_cash'])->default('paid');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();

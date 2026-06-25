@@ -8,8 +8,6 @@ class ExpenseUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -35,14 +33,12 @@ class ExpenseUpdateRequest extends FormRequest
             'expense_details' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'transaction_reference' => ['required', 'string', 'max:191'],
-            'payment_status' => ['required', 'in:paid,unpaid'],
+            'payment_status' => ['required', 'in:paid,unpaid,petty_cash'],
         ];
     }
 
     /**
      * Get custom attributes for validator errors.
-     *
-     * @return array
      */
     public function attributes(): array
     {
@@ -58,8 +54,6 @@ class ExpenseUpdateRequest extends FormRequest
 
     /**
      * Get the custom error messages for validation rules.
-     *
-     * @return array
      */
     public function messages(): array
     {
