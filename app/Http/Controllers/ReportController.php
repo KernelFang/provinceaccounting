@@ -7,7 +7,12 @@ use App\Models\Expense;
 use App\Models\Flat;
 use App\Models\Income;
 use App\Models\Project;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\FromArray;
 
 class ReportController extends Controller
 {
@@ -44,6 +49,65 @@ class ReportController extends Controller
             'report' => $report,
             'filters' => $filters,
         ]);
+    }
+
+    public function export(Request $request, string $type)
+    {
+        $module = $request->input('module');
+        $report = $module ? $this->buildReport($module, $request) : null;
+
+        if (! $report) {
+            abort(404);
+        }
+
+        if ($type === 'print') {
+            return view('reports.print', ['report' => $report]);
+        }
+
+        $fileName = Str::slug($report['title'] ?? 'report').'-'.date('Y-m-d');
+
+        if ($type === 'pdf') {
+            $pdf = Pdf::loadView('reports.export-pdf', ['report' => $report]);
+
+            return $pdf->download($fileName.'.pdf');
+        }
+
+        if ($type === 'xlsx') {
+            $export = new class($report) implements FromArray {
+                public function __construct(protected array $report) {}
+
+                public function array(): array
+                {
+                    $rows = [];
+                    $rows[] = ['Field', 'Value'];
+                    $rows[] = ['Title', $this->report['title'] ?? 'Generated Report'];
+                    $rows[] = ['Module', ucfirst($this->report['module'])];
+                    $rows[] = ['Item', $this->report['item_label'] ?? 'N/A'];
+
+                    foreach ($this->report['totals'] ?? [] as $key => $value) {
+                        $rows[] = [str_replace('_', ' ', ucfirst($key)), is_numeric($value) ? number_format($value, 2) : $value];
+                    }
+
+                    foreach ($this->report['sections'] ?? [] as $section) {
+                        $rows[] = [$section['title'], ''];
+
+                        foreach ($section['rows'] ?? [] as $row) {
+                            if (is_array($row)) {
+                                $rows[] = [($row['label'] ?? ''), ($row['value'] ?? '')];
+                            } else {
+                                $rows[] = ['Row', $row];
+                            }
+                        }
+                    }
+
+                    return $rows;
+                }
+            };
+
+            return Excel::download($export, $fileName.'.xlsx');
+        }
+
+        abort(404);
     }
 
     protected function buildReport(string $module, Request $request): array

@@ -53,3 +53,26 @@ test('client reports hide the status filter and keep the item selector available
     $response->assertDontSee('name="status"');
     $response->assertSee('Optional item filter');
 });
+
+test('report exports are available as printable html views', function () {
+    $user = User::factory()->create([
+        'user_type' => 'superadmin',
+        'email_verified_at' => now(),
+    ]);
+
+    $project = Project::factory()->create();
+
+    $printResponse = $this->actingAs($user)->get('/account/reports/export/print?module=projects&item_id='.$project->id);
+    $printResponse->assertOk();
+    $printResponse->assertHeader('Content-Type', 'text/html; charset=utf-8');
+    $printResponse->assertSee('Project Lifecycle Report');
+
+    $pdfResponse = $this->actingAs($user)->get('/account/reports/export/pdf?module=projects&item_id='.$project->id);
+    $pdfResponse->assertOk();
+    $pdfResponse->assertHeader('Content-Type', 'application/pdf');
+    $pdfResponse->assertHeaderContains('Content-Disposition', 'attachment; filename=project-lifecycle-report-');
+
+    $excelResponse = $this->actingAs($user)->get('/account/reports/export/xlsx?module=projects&item_id='.$project->id);
+    $excelResponse->assertOk();
+    $excelResponse->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+});

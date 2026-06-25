@@ -193,7 +193,21 @@
                             <div class="text-muted small">{{ $report['item_label'] ?? ucfirst($report['module']) }}
                             </div>
                         </div>
-                        <span class="badge bg-primary">{{ ucfirst($report['module']) }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary">{{ ucfirst($report['module']) }}</span>
+                            <a href="{{ route('reports.export', ['type' => 'print', 'module' => $report['module'], 'item_id' => request('item_id'), 'group_by' => request('group_by'), 'order_by' => request('order_by'), 'from_date' => request('from_date'), 'to_date' => request('to_date'), 'status' => request('status')]) }}"
+                                class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="fa-solid fa-print me-1"></i> Print
+                            </a>
+                            <a href="{{ route('reports.export', ['type' => 'pdf', 'module' => $report['module'], 'item_id' => request('item_id'), 'group_by' => request('group_by'), 'order_by' => request('order_by'), 'from_date' => request('from_date'), 'to_date' => request('to_date'), 'status' => request('status')]) }}"
+                                class="btn btn-sm btn-outline-danger" target="_blank">
+                                <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                            </a>
+                            <a href="{{ route('reports.export', ['type' => 'xlsx', 'module' => $report['module'], 'item_id' => request('item_id'), 'group_by' => request('group_by'), 'order_by' => request('order_by'), 'from_date' => request('from_date'), 'to_date' => request('to_date'), 'status' => request('status')]) }}"
+                                class="btn btn-sm btn-outline-success" target="_blank">
+                                <i class="fa-solid fa-file-excel me-1"></i> Excel
+                            </a>
+                        </div>
                     </div>
 
                     <div class="row g-3 mb-3">
@@ -224,11 +238,23 @@
                                             </div>
                                         @else
                                             @if (!empty($section['rows']))
-                                                <ul class="mb-0 ps-3">
-                                                    @foreach ($section['rows'] as $row)
-                                                        <li>{{ $row }}</li>
-                                                    @endforeach
-                                                </ul>
+                                                @php $rowCount = count($section['rows']); @endphp
+                                                @if ($rowCount > 1)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered mb-0">
+                                                            <tbody>
+                                                                @foreach ($section['rows'] as $row)
+                                                                    <tr>
+                                                                        <td>{{ $row }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <p class="mb-0">
+                                                        {{ $section['rows'][0] ?? 'No data available.' }}</p>
+                                                @endif
                                             @else
                                                 <p class="mb-0 text-muted">No data available.</p>
                                             @endif

@@ -19,6 +19,7 @@ Route::prefix('account')->group(function () {
     Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->middleware(['verified'])->name('dashboard');
         Route::get('/reports', [ReportController::class, 'index'])->middleware(['verified'])->name('reports.index');
+        Route::get('/reports/export/{type}', [ReportController::class, 'export'])->middleware(['verified'])->name('reports.export');
 
         Route::middleware(['permission'])->group(function () {
             Route::get('/profile', [UserController::class, 'profile'])->name('users.profile');
