@@ -8,17 +8,28 @@
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
-            color: #222;
+            color: #1f2937;
+            background: #fff;
+        }
+
+        .header-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 16px;
         }
 
         h1 {
             font-size: 22px;
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
+            color: #111827;
         }
 
         .meta {
-            margin-bottom: 16px;
-            color: #444;
+            margin-bottom: 6px;
+            color: #4b5563;
+            font-size: 12px;
         }
 
         .summary {
@@ -26,7 +37,11 @@
         }
 
         .summary div {
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
         }
 
         table {
@@ -37,29 +52,33 @@
 
         th,
         td {
-            border: 1px solid #ddd;
+            border: 1px solid #e5e7eb;
             padding: 7px;
             text-align: left;
         }
 
         th {
-            background: #f5f5f5;
+            background: #f3f4f6;
+            color: #111827;
         }
 
         .section-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             margin-top: 12px;
             margin-bottom: 8px;
+            color: #111827;
         }
     </style>
 </head>
 
 <body>
-    <h1>{{ $report['title'] ?? 'Generated Report' }}</h1>
-    <div class="meta">
-        <div><strong>Module:</strong> {{ ucfirst($report['module']) }}</div>
-        <div><strong>Item:</strong> {{ $report['item_label'] ?? 'N/A' }}</div>
+    <div class="header-card">
+        <h1>{{ $report['title'] ?? 'Generated Report' }}</h1>
+        <div class="meta">
+            <div><strong>Module:</strong> {{ ucfirst($report['module']) }}</div>
+            <div><strong>Item:</strong> {{ $report['item_label'] ?? 'N/A' }}</div>
+        </div>
     </div>
 
     @if (!empty($report['totals']))

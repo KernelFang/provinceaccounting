@@ -16,7 +16,7 @@ test('report page is accessible for administrators', function () {
     $response = $this->actingAs($user)->get('/account/reports');
 
     $response->assertOk();
-    $response->assertSee('Dynamic Report');
+    $response->assertSee('Advanced Report Filters');
 });
 
 test('selected project reports include lifecycle sections', function () {
