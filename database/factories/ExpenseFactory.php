@@ -17,6 +17,7 @@ class ExpenseFactory extends Factory
     public function definition()
     {
         return [
+            'title' => $this->faker->sentence(3),
             'project_id' => Project::factory(),
             'expense_type_id' => ExpenseType::factory(),
             'flat_id' => null,

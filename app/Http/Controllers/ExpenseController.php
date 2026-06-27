@@ -6,6 +6,7 @@ use App\Http\Requests\ExpenseStoreRequest;
 use App\Http\Requests\ExpenseUpdateRequest;
 use App\Models\Expense;
 use App\Models\ExpenseType;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -119,8 +120,9 @@ class ExpenseController extends Controller
     public function create(Expense $expense)
     {
         $categories = ExpenseType::orderBy('name')->get();
+        $projects = Project::orderBy('name')->get();
 
-        return view('expenses.create', compact('expense', 'categories'));
+        return view('expenses.create', compact('expense', 'categories', 'projects'));
     }
 
     /**
@@ -129,6 +131,8 @@ class ExpenseController extends Controller
     public function store(ExpenseStoreRequest $request)
     {
         $validatedData = $request->validated();
+        $validatedData['project_id'] = $validatedData['project_id'] ?? null;
+        $validatedData['title'] = trim($validatedData['title']);
 
         DB::transaction(function () use ($validatedData): void {
             Expense::create($validatedData);
@@ -151,8 +155,9 @@ class ExpenseController extends Controller
     public function edit(Expense $expense)
     {
         $categories = ExpenseType::orderBy('name')->get();
+        $projects = Project::orderBy('name')->get();
 
-        return view('expenses.edit', compact('expense', 'categories'));
+        return view('expenses.edit', compact('expense', 'categories', 'projects'));
     }
 
     /**
@@ -161,6 +166,8 @@ class ExpenseController extends Controller
     public function update(ExpenseUpdateRequest $request, Expense $expense)
     {
         $validatedData = $request->validated();
+        $validatedData['project_id'] = $validatedData['project_id'] ?? null;
+        $validatedData['title'] = trim($validatedData['title']);
 
         DB::transaction(function () use ($expense, $validatedData): void {
             $expense->update($validatedData);

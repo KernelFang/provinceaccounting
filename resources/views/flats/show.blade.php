@@ -55,9 +55,9 @@
                                                 <p class="d-flex align-items-center justify-content-between">
                                                     <span class="text">
                                                         <i class="fa fa-info-circle text-thm2 pe-2 vam"></i> Status
-                                                    </span>\n <span>{{ ucfirst($flat->client_owner_status) }}</span>
+                                                    </span>
+                                                    <span>{{ ucfirst($flat->client_owner_status) }}</span>
                                                 </p>
-
                                             </div>
                                         </div>
 

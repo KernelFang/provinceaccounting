@@ -8169,7 +8169,7 @@ textarea {
 .ud-btn i {
   margin-left: 10px;
   font-size: 16px;
-  transform: rotate(-45deg);
+  /* transform: rotate(-45deg); */
 }
 
 .ud-btn:hover,

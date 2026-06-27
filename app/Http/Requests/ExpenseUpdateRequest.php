@@ -25,7 +25,8 @@ class ExpenseUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_id' => ['required', 'integer', 'exists:projects,id'],
+            'title' => ['required', 'string', 'max:191'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
             'expense_type_id' => ['required', 'integer', 'exists:expense_types,id'],
             'flat_id' => ['nullable', 'integer', 'exists:flats,id'],
             'payment_method_id' => ['required', 'integer', 'exists:payment_methods,id'],

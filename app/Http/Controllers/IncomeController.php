@@ -54,7 +54,11 @@ class IncomeController extends Controller
 
     public function store(IncomeStoreRequest $request)
     {
-        Income::create($request->validated());
+        $validatedData = $request->validated();
+        $validatedData['project_id'] = $validatedData['project_id'] ?? null;
+        $validatedData['invoice_no'] = ! empty($validatedData['invoice_no']) ? trim($validatedData['invoice_no']) : null;
+
+        Income::create($validatedData);
 
         return redirect()->route('incomes.index')->with('success', 'Income recorded successfully.');
     }
@@ -76,7 +80,11 @@ class IncomeController extends Controller
 
     public function update(IncomeUpdateRequest $request, Income $income)
     {
-        $income->update($request->validated());
+        $validatedData = $request->validated();
+        $validatedData['project_id'] = $validatedData['project_id'] ?? null;
+        $validatedData['invoice_no'] = ! empty($validatedData['invoice_no']) ? trim($validatedData['invoice_no']) : null;
+
+        $income->update($validatedData);
 
         return redirect()->route('incomes.index')->with('success', 'Income updated successfully.');
     }

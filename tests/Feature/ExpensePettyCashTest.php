@@ -34,10 +34,37 @@ function expensePettyCashContext(float $initialBalance = 1000): array
     return compact('user', 'project', 'flat', 'expenseType', 'paymentMethod');
 }
 
+test('expenses can be created without a project and with a title', function () {
+    $context = expensePettyCashContext();
+
+    $storePayload = [
+        'title' => 'Office Supplies',
+        'project_id' => null,
+        'expense_type_id' => $context['expenseType']->id,
+        'flat_id' => $context['flat']->id,
+        'payment_method_id' => $context['paymentMethod']->id,
+        'date' => now()->toDateString(),
+        'expense_details' => 'Office supplies',
+        'amount' => '250.00',
+        'transaction_reference' => 'EXP-NULL-PROJECT',
+        'payment_status' => 'paid',
+    ];
+
+    $this->actingAs($context['user'])
+        ->post(route('expenses.store'), $storePayload)
+        ->assertRedirect(route('expenses.index'));
+
+    $expense = Expense::where('transaction_reference', 'EXP-NULL-PROJECT')->firstOrFail();
+
+    expect($expense->title)->toBe('Office Supplies');
+    expect($expense->project_id)->toBeNull();
+});
+
 test('petty cash expenses create update and delete ledger entries', function () {
     $context = expensePettyCashContext();
 
     $storePayload = [
+        'title' => 'Petty Cash Expense',
         'project_id' => $context['flat']->project_id,
         'expense_type_id' => $context['expenseType']->id,
         'flat_id' => $context['flat']->id,
@@ -57,6 +84,7 @@ test('petty cash expenses create update and delete ledger entries', function () 
     expect(PettyCash::balance())->toBe(750.00);
 
     $updatePayload = [
+        'title' => 'Petty Cash Expense Updated',
         'project_id' => $context['flat']->project_id,
         'expense_type_id' => $context['expenseType']->id,
         'flat_id' => $context['flat']->id,

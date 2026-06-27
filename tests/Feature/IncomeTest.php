@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Client;
+use App\Models\Flat;
 use App\Models\Income;
+use App\Models\PaymentMethod;
 use App\Models\User;
 
 beforeEach(function () {
@@ -24,6 +27,32 @@ test('can update income', function () {
     $this->assertDatabaseHas('incomes', [
         'id' => $income->id,
         'remarks' => 'Updated remarks',
+    ]);
+});
+
+test('can create income without a project and invoice number', function () {
+    $flat = Flat::factory()->create();
+    $client = Client::factory()->create();
+    $paymentMethod = PaymentMethod::factory()->create();
+
+    $this->actingAs($this->user)
+        ->post(route('incomes.store'), [
+            'project_id' => '',
+            'flat_id' => $flat->id,
+            'client_id' => $client->id,
+            'payment_method_id' => $paymentMethod->id,
+            'purpose' => 'Test purpose',
+            'price' => '100.50',
+            'invoice_no' => '',
+            'clearing_status' => 'pending',
+            'remarks' => 'Test remarks',
+        ])
+        ->assertRedirect(route('incomes.index'));
+
+    $this->assertDatabaseHas('incomes', [
+        'remarks' => 'Test remarks',
+        'project_id' => null,
+        'invoice_no' => null,
     ]);
 });
 

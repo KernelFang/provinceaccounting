@@ -2,6 +2,29 @@
 
 <div class="col-sm-6">
     <div class="mb20">
+        <div class="form-style1">
+            <x-input-label class="heading-color" for="project_id" :value="__('Project')" />
+            @php $selectedProjectId = old('project_id', data_get($expenseModel, 'project_id')); @endphp
+            <div class="bootselect-multiselect">
+                <select class="selectpicker" data-live-search="true" id="project_id" name="project_id">
+                    <option value="" {{ is_null($selectedProjectId) ? 'selected' : '' }}>
+                        Select
+                    </option>
+                    @foreach ($projects ?? [] as $project)
+                        <option value="{{ $project->id }}"
+                            {{ (string) $selectedProjectId === (string) $project->id ? 'selected' : '' }}>
+                            {{ $project->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <x-input-error :messages="$errors->get('project_id')" />
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-6">
+    <div class="mb20">
         <x-input-label class="heading-color" for="title" :value="__('Title')" />
         <x-text-input type="text" class="form-control" id="title" name="title" :value="old('title', data_get($expenseModel, 'title', ''))" required
             autocomplete="title" />
@@ -59,8 +82,8 @@
 <div class="col-sm-6">
     <div class="mb20">
         <x-input-label class="heading-color" for="amount" :value="__('Amount')" />
-        <x-text-input type="number" class="form-control" id="amount" name="amount" :value="old('amount', data_get($expenseModel, 'amount', ''))" step="0.01"
-            min="0" required />
+        <x-text-input type="number" class="form-control" id="amount" name="amount" :value="old('amount', data_get($expenseModel, 'amount', ''))"
+            step="0.01" min="0" required />
 
         <x-input-error :messages="$errors->get('amount')" />
     </div>

@@ -154,46 +154,6 @@
                     </div>
                 </div>
 
-                <!-- Expenses Report Table -->
-                <div class="row mt-4">
-                    <div class="col-12 col-md-6">
-                        <div class="ps-widget bgc-white bdrs4 p20 mb20 overflow-hidden position-relative">
-                            <div class="d-flex justify-content-between align-items-center bdrb1 pb10 mb10">
-                                <h5 class="title">Expenses Report by Type</h5>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm mb-0">
-                                    <thead class="text-white text-center" style="background:#222d61;">
-                                        <tr>
-                                            <th class="text-start ps-3">Expense Type</th>
-                                            <th class="text-center">Count</th>
-                                            <th class="text-center">Total Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-center">
-                                        @forelse ($expensesReport as $expense)
-                                            <tr>
-                                                <td class="text-start fw-semibold">{{ $expense->label }}</td>
-                                                <td>{{ $expense->count }}</td>
-                                                <td>{{ number_format($expense->total, 2) }} Tk.</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="3" class="text-muted">No expense data available</td>
-                                            </tr>
-                                        @endforelse
-                                        <tr class="fw-bold" style="background:#f5f5f5;">
-                                            <td class="text-start">Total</td>
-                                            <td>{{ $expensesReportSums->total_count }}</td>
-                                            <td>{{ number_format($expensesReportSums->total_amount, 2) }} Tk.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Recent Activity Tables -->
                 <div class="row mt-4">
                     <div class="col-12 col-md-6">
@@ -338,9 +298,46 @@
                     </div>
                 </div>
 
-                <!-- Recent Users -->
+                <!-- Expenses Report & Users Table -->
                 <div class="row mt-4">
-                    <div class="col-12">
+                    <div class="col-12 col-md-6">
+                        <div class="ps-widget bgc-white bdrs4 p20 mb20 overflow-hidden position-relative">
+                            <div class="d-flex justify-content-between align-items-center bdrb1 pb10 mb10">
+                                <h5 class="title">Expenses Report by Type</h5>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm mb-0">
+                                    <thead class="text-white text-center" style="background:#222d61;">
+                                        <tr>
+                                            <th class="text-start ps-3">Expense Type</th>
+                                            <th class="text-center">Count</th>
+                                            <th class="text-center">Total Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-center">
+                                        @forelse ($expensesReport as $expense)
+                                            <tr>
+                                                <td class="text-start fw-semibold">{{ $expense->label }}</td>
+                                                <td>{{ $expense->count }}</td>
+                                                <td>{{ number_format($expense->total, 2) }} Tk.</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-muted">No expense data available</td>
+                                            </tr>
+                                        @endforelse
+                                        <tr class="fw-bold" style="background:#f5f5f5;">
+                                            <td class="text-start">Total</td>
+                                            <td>{{ $expensesReportSums->total_count }}</td>
+                                            <td>{{ number_format($expensesReportSums->total_amount, 2) }} Tk.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
                         <div class="ps-widget bgc-white bdrs4 p20 mb20 overflow-hidden position-relative">
                             <div class="d-flex justify-content-between align-items-center bdrb1 pb10 mb10">
                                 <h5 class="title">Recent Users</h5>

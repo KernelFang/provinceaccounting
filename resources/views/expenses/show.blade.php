@@ -39,6 +39,13 @@
 
                                                 <p class="d-flex align-items-center justify-content-between bdrb1 pb-2">
                                                     <span class="text">
+                                                        <i class="fa fa-building text-thm2 pe-2 vam"></i> Project
+                                                    </span>
+                                                    <span>{{ $expense->project->name ?? 'N/A' }}</span>
+                                                </p>
+
+                                                <p class="d-flex align-items-center justify-content-between bdrb1 pb-2">
+                                                    <span class="text">
                                                         <i class="fa fa-money-bill-wave text-thm2 pe-2 vam"></i> Amount
                                                         (TK.)
                                                     </span>
@@ -80,7 +87,7 @@
                                             <div class="p30 mb30 bg-white bdrs12 wow fadeInUp default-box-shadow1 bdr1">
                                                 <h4><i class="fa fa-align-left pe-2 text-thm2"></i> Description</h4>
                                                 <p class="text mb30">
-                                                    {{ $expense->description ?? 'No description provided' }}</p>
+                                                    {{ $expense->expense_details ?? 'No description provided' }}</p>
                                             </div>
                                         </div>
                                     </div>

@@ -18,6 +18,7 @@ class Expense extends Model
      * @var array<string>
      */
     protected $fillable = [
+        'title',
         'project_id',
         'expense_type_id',
         'flat_id',
@@ -45,6 +46,7 @@ class Expense extends Model
      * @return array<string, string>
      */
     protected $casts = [
+        'title' => 'string',
         'project_id' => 'integer',
         'expense_type_id' => 'integer',
         'flat_id' => 'integer',
