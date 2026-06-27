@@ -141,5 +141,7 @@ test('expense form submits the expected details field and includes petty cash op
         ->get(route('expenses.create'))
         ->assertOk()
         ->assertSee('name="expense_details"', false)
+        ->assertSee('name="payment_method_id"', false)
+        ->assertSee('name="transaction_reference"', false)
         ->assertSee('value="petty_cash"', false);
 });

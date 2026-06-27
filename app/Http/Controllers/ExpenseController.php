@@ -6,6 +6,7 @@ use App\Http\Requests\ExpenseStoreRequest;
 use App\Http\Requests\ExpenseUpdateRequest;
 use App\Models\Expense;
 use App\Models\ExpenseType;
+use App\Models\PaymentMethod;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -121,8 +122,9 @@ class ExpenseController extends Controller
     {
         $categories = ExpenseType::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('name')->get();
 
-        return view('expenses.create', compact('expense', 'categories', 'projects'));
+        return view('expenses.create', compact('expense', 'categories', 'projects', 'paymentMethods'));
     }
 
     /**
@@ -156,8 +158,9 @@ class ExpenseController extends Controller
     {
         $categories = ExpenseType::orderBy('name')->get();
         $projects = Project::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('name')->get();
 
-        return view('expenses.edit', compact('expense', 'categories', 'projects'));
+        return view('expenses.edit', compact('expense', 'categories', 'projects', 'paymentMethods'));
     }
 
     /**

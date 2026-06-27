@@ -1,4 +1,9 @@
-@php $expenseModel = $expense ?? new \App\Models\Expense(); @endphp
+@php
+    $expenseModel = $expense ?? new \App\Models\Expense();
+    $projects = $projects ?? collect();
+    $categories = $categories ?? collect();
+    $paymentMethods = $paymentMethods ?? collect();
+@endphp
 
 <div class="col-sm-6">
     <div class="mb20">
@@ -60,6 +65,29 @@
 <div class="col-sm-6">
     <div class="mb20">
         <div class="form-style1">
+            <x-input-label class="heading-color" for="payment_method_id" :value="__('Payment Method')" />
+            <div class="bootselect-multiselect">
+                <select class="selectpicker" data-live-search="true" id="payment_method_id" name="payment_method_id"
+                    required>
+                    <option value="" disabled
+                        {{ is_null(old('payment_method_id', data_get($expenseModel, 'payment_method_id'))) ? 'selected' : '' }}>
+                        Select</option>
+                    @foreach ($paymentMethods ?? [] as $paymentMethod)
+                        <option value="{{ $paymentMethod->id }}"
+                            {{ (int) old('payment_method_id', data_get($expenseModel, 'payment_method_id')) === $paymentMethod->id ? 'selected' : '' }}>
+                            {{ $paymentMethod->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <x-input-error :messages="$errors->get('payment_method_id')" />
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-6">
+    <div class="mb20">
+        <div class="form-style1">
             <x-input-label class="heading-color" for="payment_status" :value="__('Payment Status')" />
             <div class="bootselect-multiselect">
                 <select class="selectpicker" data-live-search="false" id="payment_status" name="payment_status"
@@ -95,6 +123,16 @@
         <x-text-input type="date" class="form-control" id="date" name="date" :value="old('date', optional(data_get($expenseModel, 'date'))->format('Y-m-d') ?? now()->format('Y-m-d'))" required />
 
         <x-input-error :messages="$errors->get('date')" />
+    </div>
+</div>
+
+<div class="col-sm-6">
+    <div class="mb20">
+        <x-input-label class="heading-color" for="transaction_reference" :value="__('Transaction Reference')" />
+        <x-text-input type="text" class="form-control" id="transaction_reference" name="transaction_reference"
+            :value="old('transaction_reference', data_get($expenseModel, 'transaction_reference', ''))" required autocomplete="off" />
+
+        <x-input-error :messages="$errors->get('transaction_reference')" />
     </div>
 </div>
 
